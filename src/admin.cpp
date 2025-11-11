@@ -1,88 +1,138 @@
 #include "admin.h"
 
+// ========================================
+// ADMIN.CPP - Admin Class Implementation
+// ========================================
+// This file implements the Admin class which inherits from User.
+// Admin has full control: manage events (create/edit/delete), view reports, manage users.
+// Demonstrates: Inheritance, File I/O, CRUD operations, Vector manipulation
+
 // Constructor calling base class constructor
+// What it does: Creates an Admin object by passing data to the User constructor
+// The colon syntax ": User(uname, pass, name)" calls the parent class constructor
+// This is called "constructor chaining" or "constructor initialization list"
 Admin::Admin(string uname, string pass, string name) : User(uname, pass, name) {}
 
 // Polymorphism: Admin-specific menu implementation
+// What it does: Overrides the pure virtual function from User base class
+// This is the menu shown to admin users
+// 'override' keyword (in header) tells compiler we're intentionally overriding a virtual function
 void Admin::displayMenu() {
     cout << "\n=== ADMIN DASHBOARD ===" << endl;
-    cout << "Welcome, " << fullName << "!" << endl;
-    cout << "1. Manage Events" << endl;
-    cout << "2. View All Events" << endl;
-    cout << "3. View Event Statistics" << endl;
-    cout << "4. View Registration Reports" << endl;
-    cout << "5. Manage Users" << endl;
-    cout << "6. Logout" << endl;
+    cout << "Welcome, " << fullName << "!" << endl;  // fullName inherited from User class
+    cout << "1. Manage Events" << endl;              // Add/Edit/Delete events
+    cout << "2. View All Events" << endl;            // List all events
+    cout << "3. View Event Statistics" << endl;      // Show occupancy stats
+    cout << "4. View Registration Reports" << endl;  // See who registered for what
+    cout << "5. Manage Users" << endl;               // Add students, view users
+    cout << "6. Logout" << endl;                     // Exit admin panel
     cout << "Choose an option: ";
 }
 
 // Virtual method implementation
+// What it does: Returns the user type as a string
+// This is called polymorphically in main.cpp to display user type
 string Admin::getUserType() {
     return "Admin";
 }
 
+// ==================== FILE I/O OPERATIONS ====================
+// These functions handle reading and writing data to text files
+// This is how we persist data (save it permanently) without a database
+
 // Load events from file into vector
+// What it does: Reads events.txt and creates Event objects from the data
+// Returns: Vector (dynamic array) containing all Event objects
 vector<Event> Admin::loadEventsFromFile() {
-    vector<Event> events;
-    ifstream file("data/events.txt");
-    string line;
+    vector<Event> events;              // Create empty vector to store events
+    ifstream file("data/events.txt");  // Open file for reading (ifstream = input file stream)
+    string line;                       // Variable to store each line
     
+    // Check if file opened successfully
     if (!file.is_open()) {
         cout << "Error: Could not open events.txt file!" << endl;
-        return events;
+        return events;    // Return empty vector
     }
     
+    // Read file line by line
     while (getline(file, line)) {
-        if (line.empty()) continue;
+        if (line.empty()) continue;    // Skip empty lines
         
+        // Split the line by pipe (|) delimiter
+        // File format: eventname|date|venue|capacity|registered
         vector<string> parts = split(line, '|');
+        
+        // Make sure we have at least 4 parts (registered count is optional)
         if (parts.size() >= 4) {
+            // Extract and clean each field
             string name = trim(parts[0]);
             string date = trim(parts[1]);
             string venue = trim(parts[2]);
-            int capacity = stoi(trim(parts[3]));
+            int capacity = stoi(trim(parts[3]));  // stoi = "string to integer"
+            
+            // Ternary operator: (condition ? if_true : if_false)
+            // If there's a 5th part, use it; otherwise use 0
             int registered = (parts.size() > 4) ? stoi(trim(parts[4])) : 0;
             
+            // Create Event object and add it to the vector
+            // push_back() adds an element to the end of the vector
             events.push_back(Event(name, date, venue, capacity, registered));
         }
     }
     
-    file.close();
-    return events;
+    file.close();    // Always close files when done
+    return events;   // Return vector containing all events
 }
 
 // Save events to file
+// What it does: Writes all Event objects back to events.txt
+// Parameters: 'const vector<Event>&' means we pass by reference (efficient) and won't modify it
+// Returns: true if successful, false if error
 bool Admin::saveEventsToFile(const vector<Event>& events) {
-    ofstream file("data/events.txt");
+    ofstream file("data/events.txt");  // Open file for writing (ofstream = output file stream)
     
+    // Check if file opened successfully
     if (!file.is_open()) {
         cout << "Error: Could not open events.txt for writing!" << endl;
         return false;
     }
     
+    // Write each event to the file
+    // 'const auto&' = compiler figures out the type (Event), const means read-only, & means reference
     for (const auto& event : events) {
+        // toFileFormat() converts Event object to pipe-delimited string
         file << event.toFileFormat() << endl;
     }
     
-    file.close();
-    return true;
+    file.close();    // Always close files when done
+    return true;     // Indicate success
 }
 
 // Load registrations from file
+// What it does: Reads registrations.txt and creates Registration objects
+// Similar to loadEventsFromFile but for registrations
+// Returns: Vector of Registration objects
 vector<Registration> Admin::loadRegistrationsFromFile() {
-    vector<Registration> registrations;
-    ifstream file("data/registrations.txt");
+    vector<Registration> registrations;      // Empty vector to store registrations
+    ifstream file("data/registrations.txt"); // Open registrations file
     string line;
     
+    // If file doesn't exist or can't open, return empty vector (not an error)
     if (!file.is_open()) {
         return registrations;
     }
     
+    // Read each line from the file
     while (getline(file, line)) {
-        if (line.empty()) continue;
+        if (line.empty()) continue;    // Skip empty lines
         
+        // Split by pipe delimiter
+        // File format: username|eventname|registrationdate
         vector<string> parts = split(line, '|');
+        
+        // Must have exactly 3 parts
         if (parts.size() == 3) {
+            // Create Registration object and add to vector
             registrations.push_back(Registration(trim(parts[0]), trim(parts[1]), trim(parts[2])));
         }
     }
@@ -92,14 +142,17 @@ vector<Registration> Admin::loadRegistrationsFromFile() {
 }
 
 // Save registrations to file
+// What it does: Writes all Registration objects back to registrations.txt
+// Called after: A student registers or unregisters from an event
 bool Admin::saveRegistrationsToFile(const vector<Registration>& registrations) {
-    ofstream file("data/registrations.txt");
+    ofstream file("data/registrations.txt");  // Open for writing
     
     if (!file.is_open()) {
         cout << "Error: Could not open registrations.txt for writing!" << endl;
         return false;
     }
     
+    // Write each registration to file
     for (const auto& reg : registrations) {
         file << reg.toFileFormat() << endl;
     }
@@ -108,34 +161,41 @@ bool Admin::saveRegistrationsToFile(const vector<Registration>& registrations) {
     return true;
 }
 
-// Admin menu for event management
+// ==================== EVENT MANAGEMENT MENU ====================
+
+// Admin menu for event management (CRUD operations)
+// What it does: Shows a submenu for managing events
+// CRUD = Create, Read, Update, Delete
 void Admin::manageEvents() {
-    bool managing = true;
+    bool managing = true;    // Control variable for the loop
     
+    // Loop until user chooses to go back
     while (managing) {
         cout << "\n=== EVENT MANAGEMENT ===" << endl;
-        cout << "1. Add New Event" << endl;
-        cout << "2. Edit Event" << endl;
-        cout << "3. Delete Event" << endl;
+        cout << "1. Add New Event" << endl;          // CREATE
+        cout << "2. Edit Event" << endl;             // UPDATE
+        cout << "3. Delete Event" << endl;           // DELETE
         cout << "4. Back to Dashboard" << endl;
         cout << "Choose an option: ";
         
         int choice;
-        cin >> choice;
-        cin.ignore();
+        cin >> choice;      // Get user choice
+        cin.ignore();       // Clear input buffer (important for mixing cin >> and getline)
         
+        // Switch statement for menu navigation
+        // More efficient than multiple if-else when checking same variable
         switch (choice) {
             case 1:
-                addNewEvent();
-                break;
+                addNewEvent();    // Call function to add a new event
+                break;            // Exit switch (not the loop)
             case 2:
-                editEvent();
+                editEvent();      // Call function to modify existing event
                 break;
             case 3:
-                deleteEvent();
+                deleteEvent();    // Call function to remove an event
                 break;
             case 4:
-                managing = false;
+                managing = false; // Set to false to exit the loop
                 break;
             default:
                 cout << "Invalid choice!" << endl;
@@ -143,40 +203,49 @@ void Admin::manageEvents() {
     }
 }
 
-// Add new event
+// Add new event (CREATE operation)
+// What it does: Gets event details from admin and adds it to the system
+// Input validation: Checks for empty fields, duplicate names, valid date format
 void Admin::addNewEvent() {
     cout << "\n=== ADD NEW EVENT ===" << endl;
     
+    // Declare variables to store event details
     string eventName, date, venue;
     int capacity;
     
+    // Get event name
     cout << "Event Name: ";
-    getline(cin, eventName);
-    eventName = trim(eventName);
+    getline(cin, eventName);    // getline reads entire line (allows spaces in name)
+    eventName = trim(eventName); // Remove leading/trailing whitespace
     
+    // Validate: Name cannot be empty
     if (eventName.empty()) {
         cout << "Error: Event name cannot be empty!" << endl;
-        return;
+        return;    // Exit function early if validation fails
     }
     
-    // Check for duplicate
-    vector<Event> events = loadEventsFromFile();
+    // Check for duplicate event names
+    vector<Event> events = loadEventsFromFile();  // Load existing events
     for (const auto& e : events) {
+        // Case-insensitive comparison using toLower()
         if (toLower(e.getEventName()) == toLower(eventName)) {
             cout << "Error: Event with this name already exists!" << endl;
-            return;
+            return;    // Exit if duplicate found
         }
     }
     
+    // Get and validate date
     cout << "Date (DD-MM-YYYY): ";
     getline(cin, date);
     date = trim(date);
     
+    // isValidDate() checks format and value ranges
     if (!isValidDate(date)) {
         cout << "Error: Invalid date format! Use DD-MM-YYYY format." << endl;
         return;
     }
     
+    // Get and validate venue
     cout << "Venue: ";
     getline(cin, venue);
     venue = trim(venue);
@@ -186,6 +255,7 @@ void Admin::addNewEvent() {
         return;
     }
     
+    // Get and validate capacity
     cout << "Capacity: ";
     cin >> capacity;
     
@@ -194,9 +264,11 @@ void Admin::addNewEvent() {
         return;
     }
     
-    // Add new event
+    // All validations passed - add new event to vector
+    // Last parameter (0) means 0 students registered initially
     events.push_back(Event(eventName, date, venue, capacity, 0));
     
+    // Save updated vector back to file
     if (saveEventsToFile(events)) {
         cout << "\nSuccess! Event '" << eventName << "' added successfully!" << endl;
     } else {
