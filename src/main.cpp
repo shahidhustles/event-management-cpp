@@ -85,9 +85,9 @@ User* authenticateUser(string username, string password) {
 // What it does: Shows a nice welcome screen when the program starts
 void displayWelcome() {
     cout << "\n=================================================" << endl;
-    cout << "   COLLEGE EVENT MANAGEMENT SYSTEM - PHASE 2    " << endl;
+    cout << "   COLLEGE EVENT MANAGEMENT SYSTEM   " << endl;
     cout << "=================================================" << endl;
-    cout << "Features available in this phase:" << endl;
+    cout << "Features available :" << endl;
     cout << "• User Authentication (Admin/Student)" << endl;
     cout << "• Role-based Menu Systems" << endl;
     cout << "• CRUD Operations on Events" << endl;

@@ -431,11 +431,17 @@ void Admin::deleteEvent() {
         
         if (saveEventsToFile(events)) {
             vector<Registration> registrations = loadRegistrationsFromFile();
-            registrations.erase(
-                remove_if(registrations.begin(), registrations.end(),
-                [&](const Registration& r) { return r.getEventName() == deletedEventName; }),
-                registrations.end()
-            );
+            vector<Registration> updatedRegistrations;
+            
+            // Loop through all registrations and keep only those not matching the deleted event
+            for (const auto& reg : registrations) {
+                if (reg.getEventName() != deletedEventName) {
+                    updatedRegistrations.push_back(reg);
+                }
+            }
+            
+            // Replace the original vector with the filtered one
+            registrations = updatedRegistrations;
             saveRegistrationsToFile(registrations);
             
             cout << "Event deleted successfully!" << endl;
