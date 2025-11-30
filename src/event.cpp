@@ -78,7 +78,7 @@ bool Event::hasAvailableSeats() const {
 // Safety check: Only increments if seats are available
 void Event::registerStudent() {
     if (hasAvailableSeats()) {           // Check if there's space
-        registeredCount++;               // Increase count by 1
+        registeredCount = registeredCount + 1;               // Increase count by 1
     }
 }
 
@@ -87,7 +87,7 @@ void Event::registerStudent() {
 // Safety check: Only decrements if count is greater than 0
 void Event::unregisterStudent() {
     if (registeredCount > 0) {           // Check if there are registrations to remove
-        registeredCount--;               // Decrease count by 1
+        registeredCount = registeredCount - 1;               // Decrease count by 1
     }
 }
 

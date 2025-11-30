@@ -68,11 +68,11 @@ vector<Event> Admin::loadEventsFromFile() {
             string name = trim(parts[0]);
             string date = trim(parts[1]);
             string venue = trim(parts[2]);
-            int capacity = stoi(trim(parts[3]));  // stoi = "string to integer"
+            int capacity = static_cast<int>(stoi(trim(parts[3])));  // stoi = "string to integer"
             
             // Ternary operator: (condition ? if_true : if_false)
             // If there's a 5th part, use it; otherwise use 0
-            int registered = (parts.size() > 4) ? stoi(trim(parts[4])) : 0;
+            int registered = (parts.size() > 4) ? static_cast<int>(stoi(trim(parts[4]))) : 0;
             
             // Create Event object and add it to the vector
             // push_back() adds an element to the end of the vector
@@ -98,10 +98,8 @@ bool Admin::saveEventsToFile(const vector<Event>& events) {
     }
     
     // Write each event to the file
-    // 'const auto&' = compiler figures out the type (Event), const means read-only, & means reference
-    for (const auto& event : events) {
-        // toFileFormat() converts Event object to pipe-delimited string
-        file << event.toFileFormat() << endl;
+    for (size_t i = 0; i < events.size(); i = i + 1) {
+        file << events[i].toFileFormat() << endl;
     }
     
     file.close();    // Always close files when done
@@ -153,8 +151,8 @@ bool Admin::saveRegistrationsToFile(const vector<Registration>& registrations) {
     }
     
     // Write each registration to file
-    for (const auto& reg : registrations) {
-        file << reg.toFileFormat() << endl;
+    for (size_t i = 0; i < registrations.size(); i = i + 1) {
+        file << registrations[i].toFileFormat() << endl;
     }
     
     file.close();
@@ -226,9 +224,9 @@ void Admin::addNewEvent() {
     
     // Check for duplicate event names
     vector<Event> events = loadEventsFromFile();  // Load existing events
-    for (const auto& e : events) {
+    for (size_t i = 0; i < events.size(); i = i + 1) {
         // Case-insensitive comparison using toLower()
-        if (toLower(e.getEventName()) == toLower(eventName)) {
+        if (toLower(events[i].getEventName()) == toLower(eventName)) {
             cout << "Error: Event with this name already exists!" << endl;
             return;    // Exit if duplicate found
         }
@@ -257,12 +255,15 @@ void Admin::addNewEvent() {
     
     // Get and validate capacity
     cout << "Capacity: ";
-    cin >> capacity;
+    int cap_input;
+    cin >> cap_input;
     
-    if (capacity <= 0) {
+    if (cap_input <= 0) {
         cout << "Error: Capacity must be greater than 0!" << endl;
         return;
     }
+    
+    capacity = static_cast<int>(cap_input);
     
     // All validations passed - add new event to vector
     // Last parameter (0) means 0 students registered initially
@@ -321,9 +322,9 @@ void Admin::editEvent() {
             
             if (!newName.empty()) {
                 bool duplicate = false;
-                for (const auto& e : events) {
-                    if (toLower(e.getEventName()) == toLower(newName) && 
-                        toLower(e.getEventName()) != toLower(event.getEventName())) {
+                for (size_t i = 0; i < events.size(); i = i + 1) {
+                    if (toLower(events[i].getEventName()) == toLower(newName) && 
+                        toLower(events[i].getEventName()) != toLower(event.getEventName())) {
                         duplicate = true;
                         break;
                     }
@@ -365,15 +366,15 @@ void Admin::editEvent() {
             break;
         }
         case 4: {
-            int newCapacity;
+            int newCap_input;
             cout << "New capacity: ";
-            cin >> newCapacity;
+            cin >> newCap_input;
             
-            if (newCapacity < event.getRegisteredCount()) {
+            if (newCap_input < 0 || static_cast<int>(newCap_input) < event.getRegisteredCount()) {
                 cout << "Error: New capacity cannot be less than registered count (" 
                      << event.getRegisteredCount() << ")!" << endl;
-            } else if (newCapacity > 0) {
-                event.setCapacity(newCapacity);
+            } else if (newCap_input > 0) {
+                event.setCapacity(static_cast<int>(newCap_input));
                 cout << "Capacity updated successfully!" << endl;
             } else {
                 cout << "Error: Capacity must be greater than 0!" << endl;
@@ -434,9 +435,9 @@ void Admin::deleteEvent() {
             vector<Registration> updatedRegistrations;
             
             // Loop through all registrations and keep only those not matching the deleted event
-            for (const auto& reg : registrations) {
-                if (reg.getEventName() != deletedEventName) {
-                    updatedRegistrations.push_back(reg);
+            for (size_t i = 0; i < registrations.size(); i = i + 1) {
+                if (registrations[i].getEventName() != deletedEventName) {
+                    updatedRegistrations.push_back(registrations[i]);
                 }
             }
             
@@ -488,13 +489,13 @@ void Admin::displayEventStats() {
     
     cout << "\n=== EVENT STATISTICS ===" << endl;
     
-    int totalEvents = events.size();
+    size_t totalEvents = events.size();
     int totalCapacity = 0;
     int totalRegistered = 0;
     
-    for (const auto& event : events) {
-        totalCapacity += event.getCapacity();
-        totalRegistered += event.getRegisteredCount();
+    for (size_t i = 0; i < events.size(); i = i + 1) {
+        totalCapacity = totalCapacity + events[i].getCapacity();
+        totalRegistered = totalRegistered + events[i].getRegisteredCount();
     }
     
     cout << "Total Events: " << totalEvents << endl;
@@ -505,10 +506,10 @@ void Admin::displayEventStats() {
     
     cout << "\nEvent-wise Breakdown:" << endl;
     cout << "-------------------------------------------" << endl;
-    for (const auto& event : events) {
-        cout << event.getEventName() << ": " << event.getRegisteredCount() 
-             << "/" << event.getCapacity() << " (" << fixed << setprecision(1)
-             << (event.getCapacity() > 0 ? (event.getRegisteredCount() * 100.0 / event.getCapacity()) : 0) 
+    for (size_t i = 0; i < events.size(); i = i + 1) {
+        cout << events[i].getEventName() << ": " << events[i].getRegisteredCount() 
+             << "/" << events[i].getCapacity() << " (" << fixed << setprecision(1)
+             << (events[i].getCapacity() > 0 ? (events[i].getRegisteredCount() * 100.0 / events[i].getCapacity()) : 0) 
              << "%)" << endl;
     }
 }
@@ -535,24 +536,25 @@ void Admin::viewRegistrationReports() {
     
     if (choice == 0) {
         cout << "\n=== REGISTRATION SUMMARY ===" << endl;
-        for (const auto& event : events) {
+        for (size_t i = 0; i < events.size(); i = i + 1) {
             int count = 0;
-            for (const auto& reg : registrations) {
-                if (reg.getEventName() == event.getEventName()) {
-                    count++;
+            for (size_t j = 0; j < registrations.size(); j = j + 1) {
+                if (registrations[j].getEventName() == events[i].getEventName()) {
+                    count = count + 1;
                 }
             }
-            cout << event.getEventName() << ": " << count << " registrations" << endl;
+            cout << events[i].getEventName() << ": " << count << " registrations" << endl;
         }
     } else if (choice >= 1 && choice <= (int)events.size()) {
         string eventName = events[choice - 1].getEventName();
         cout << "\n=== PARTICIPANTS FOR: " << eventName << " ===" << endl;
         
         int count = 0;
-        for (const auto& reg : registrations) {
-            if (reg.getEventName() == eventName) {
-                cout << "  " << ++count << ". " << reg.getStudentUsername() 
-                     << " (Registered: " << reg.getRegistrationDate() << ")" << endl;
+        for (size_t j = 0; j < registrations.size(); j = j + 1) {
+            if (registrations[j].getEventName() == eventName) {
+                count = count + 1;
+                cout << "  " << count << ". " << registrations[j].getStudentUsername() 
+                     << " (Registered: " << registrations[j].getRegistrationDate() << ")" << endl;
             }
         }
         
@@ -670,7 +672,8 @@ void Admin::viewAllUsers() {
         
         vector<string> parts = split(line, ',');
         if (parts.size() >= 4) {
-            cout << ++count << ". Username: " << trim(parts[0]) 
+            count = count + 1;
+            cout << count << ". Username: " << trim(parts[0]) 
                  << " | Name: " << trim(parts[2]) 
                  << " | Type: " << trim(parts[3]) << endl;
         }

@@ -76,9 +76,9 @@ bool isValidDate(const string& date) {
     if (!isNumeric(day) || !isNumeric(month) || !isNumeric(year)) return false;
     
     // Convert strings to integers for range validation
-    int d = stoi(day);       // stoi = "string to integer"
-    int m = stoi(month);
-    int y = stoi(year);
+    int d = static_cast<int>(stoi(day));       // stoi = "string to integer"
+    int m = static_cast<int>(stoi(month));
+    int y = static_cast<int>(stoi(year));
     
     // Validate month range (1-12)
     if (m < 1 || m > 12) return false;
@@ -99,9 +99,10 @@ bool isValidDate(const string& date) {
 string toLower(const string& str) {
     string result = str;    // Create a copy of the input string
     
-    // transform applies the ::tolower function to each character
-    // ::tolower is a standard library function that converts a character to lowercase
-    transform(result.begin(), result.end(), result.begin(), ::tolower);
+    // Convert each character to lowercase manually
+    for (char& c : result) {
+        c = tolower(c);
+    }
     
     return result;          // Return the lowercase version
 }

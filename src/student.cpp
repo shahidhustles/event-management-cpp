@@ -6,7 +6,6 @@
 // This file implements the Student class which inherits from User.
 // Students can: browse events, register/unregister, view their registrations, search events.
 // Demonstrates: Inheritance, File I/O, Vector manipulation, Searching/Filtering
-
 // Constructor with base class initialization
 // What it does: Creates a Student object by passing data to the User constructor
 // The colon syntax calls the parent class (User) constructor
@@ -57,8 +56,8 @@ vector<Event> Student::loadEventsFromFile() {
             string name = trim(parts[0]);
             string date = trim(parts[1]);
             string venue = trim(parts[2]);
-            int capacity = stoi(trim(parts[3]));
-            int registered = (parts.size() > 4) ? stoi(trim(parts[4])) : 0;
+            int capacity = static_cast<int>(stoi(trim(parts[3])));
+            int registered = (parts.size() > 4) ? static_cast<int>(stoi(trim(parts[4]))) : 0;
             
             events.push_back(Event(name, date, venue, capacity, registered));
         }
@@ -78,8 +77,8 @@ bool Student::saveEventsToFile(const vector<Event>& events) {
         return false;
     }
     
-    for (const auto& event : events) {
-        file << event.toFileFormat() << endl;
+    for (size_t i = 0; i < events.size(); i = i + 1) {
+        file << events[i].toFileFormat() << endl;
     }
     
     file.close();
@@ -120,8 +119,8 @@ bool Student::saveRegistrationsToFile(const vector<Registration>& registrations)
         return false;
     }
     
-    for (const auto& reg : registrations) {
-        file << reg.toFileFormat() << endl;
+    for (size_t i = 0; i < registrations.size(); i = i + 1) {
+        file << registrations[i].toFileFormat() << endl;
     }
     
     file.close();
@@ -176,9 +175,9 @@ void Student::viewMyRegistrations() {
     cout << "\n=== MY REGISTRATIONS ===" << endl;
     
     vector<Registration> myRegs;
-    for (const auto& reg : registrations) {
-        if (reg.getStudentUsername() == username) {
-            myRegs.push_back(reg);
+    for (size_t i = 0; i < registrations.size(); i = i + 1) {
+        if (registrations[i].getStudentUsername() == username) {
+            myRegs.push_back(registrations[i]);
         }
     }
     
@@ -269,8 +268,8 @@ void Student::registerForEvent() {
     
     // VALIDATION 1: Check if already registered
     // Loop through all registrations to see if this student already registered for this event
-    for (const auto& reg : registrations) {
-        if (reg.getStudentUsername() == username && reg.getEventName() == eventName) {
+    for (size_t i = 0; i < registrations.size(); i = i + 1) {
+        if (registrations[i].getStudentUsername() == username && registrations[i].getEventName() == eventName) {
             cout << "Error: You are already registered for this event!" << endl;
             return;    // Exit early if duplicate found
         }
@@ -307,27 +306,25 @@ void Student::unregisterFromEvent(const string& eventName) {
     vector<Event> events = loadEventsFromFile();
     vector<Registration> registrations = loadRegistrationsFromFile();
     
-    // Find and remove registration using find_if algorithm
-    // find_if searches for the first element that matches the condition
-    // LAMBDA FUNCTION: [this, &eventName](const Registration& r) { ... }
-    // - [this, &eventName] = capture clause (what variables from outside the lambda can be used)
-    // - (const Registration& r) = parameter (each Registration as it's checked)
-    // - { return ... } = function body that returns true if this is the registration to remove
-    auto it = find_if(registrations.begin(), registrations.end(),
-        [this, &eventName](const Registration& r) {
-            return r.getStudentUsername() == username && r.getEventName() == eventName;
-        });
+    // Find the registration manually by looping through the vector
+    size_t index = 0;
+    bool found = false;
+    for (size_t i = 0; i < registrations.size(); ++i) {
+        if (registrations[i].getStudentUsername() == username && registrations[i].getEventName() == eventName) {
+            index = i;
+            found = true;
+            break;
+        }
+    }
     
     // Check if registration was found
-    // If find_if doesn't find anything, it returns registrations.end()
-    if (it == registrations.end()) {
+    if (!found) {
         cout << "Error: Registration not found!" << endl;
         return;
     }
     
     // Remove the registration from the vector
-    // 'it' is an iterator (like a pointer) to the element we want to remove
-    registrations.erase(it);
+    registrations.erase(registrations.begin() + index);
     
     // Find the event and decrease its registered count
     for (auto& event : events) {
@@ -369,11 +366,11 @@ void Student::searchEventByName() {
     
     // Search through events and collect matching ones
     vector<Event> results;    // Vector to store matching events
-    for (const auto& event : events) {
+    for (size_t i = 0; i < events.size(); i = i + 1) {
         // find() returns string::npos if the substring is not found
         // So if find() doesn't return npos, it means the search term was found
-        if (toLower(event.getEventName()).find(searchTerm) != string::npos) {
-            results.push_back(event);    // Add matching event to results
+        if (toLower(events[i].getEventName()).find(searchTerm) != string::npos) {
+            results.push_back(events[i]);    // Add matching event to results
         }
     }
     
@@ -423,9 +420,9 @@ void Student::filterEventsByDate() {
     }
     
     vector<Event> results;
-    for (const auto& event : events) {
-        if (event.getDate() == searchDate) {
-            results.push_back(event);
+    for (size_t i = 0; i < events.size(); i = i + 1) {
+        if (events[i].getDate() == searchDate) {
+            results.push_back(events[i]);
         }
     }
     
